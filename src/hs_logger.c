@@ -59,6 +59,10 @@ hs_log(void *context, const char *plugin, int severity, const char *fmt, ...)
     ts.tv_nsec = 0;
   }
 
+  va_list args;
+  va_start(args, fmt);
+  pthread_mutex_lock(&g_logger);
+  pthread_cleanup_push(release_mutex, &g_logger);
   const char *level;
   switch (severity) {
   case 7:
@@ -89,11 +93,6 @@ hs_log(void *context, const char *plugin, int severity, const char *fmt, ...)
     level = "debug";
     break;
   }
-
-  va_list args;
-  va_start(args, fmt);
-  pthread_mutex_lock(&g_logger);
-  pthread_cleanup_push(release_mutex, &g_logger);
   fprintf(stderr, "%lld [%s] %s ", ts.tv_sec * 1000000000LL + ts.tv_nsec, level,
           plugin ? plugin : "unnamed");
   vfprintf(stderr, fmt, args);
